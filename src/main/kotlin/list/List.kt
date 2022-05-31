@@ -3,7 +3,7 @@ package list
 class Node<T>(val value: T, var next: Node<T>?)
 
 class MyList<T>(initValue: T) {
-    var head: Node<T> = Node(initValue, null)
+    private var head: Node<T> = Node(initValue, null)
     private var size = 1
 
     fun add(newValue: T) {
