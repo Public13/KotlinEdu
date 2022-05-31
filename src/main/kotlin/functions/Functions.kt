@@ -1,11 +1,5 @@
 package functions
 
-class user {}
-
-fun user.getage(): Int {
-    return 42
-}
-
 tailrec fun fact(n: Int): Int = if (n == 1) 1 else n * fact(n - 1)
 
 fun fact2(n: Int): Int {
@@ -15,31 +9,43 @@ fun fact2(n: Int): Int {
     return go(n, 1)
 }
 
+fun add(a: Int, b: Int) = a + b
+fun printPersonAge(age: Int, name: String) = "$name is $age years old"
+
 // f(a,b)->c === f(a)->g(b)->c
 // фиксация
-fun addFix42(x: Int, f: (Int, Int) -> Int): (Int) -> Int {
-    return { y -> f(x, y) }
-}
+fun <T, V, U> funFix(x: T, f: (T, V) -> U): (V) -> U = { y -> f(x, y) }
 
-fun add(a: Int, b: Int) = a + b
+// Представление функций многих аргументов в виде последовательности функций одного аргумента
+fun <U, V, T> curry(f: (U, V) -> T): (U) -> (V) -> T = { a -> { b -> f(a, b) } }
+fun <U, V, R, T> curry2(f: (U, V, T) -> R): (U) -> (V) -> (T) -> R = { a -> { b -> { c -> f(a, b, c) } } }
 
-
-fun curry(f: (Int, Int) -> Int): (Int) -> (Int) -> Int = { a -> { b -> f(a, b) } }
-//    fun final(a: Int): Int = a
-//    fun first(b: Int): (Int) -> Int = { final(b) }
-//    return { y -> first(y) }
-//}
-
-fun uncurry(f: (Int) -> (Int) -> Int): (Int, Int) -> Int = { a, b -> f(a)(b) }
+fun <U, V, T> uncurry(f: (U) -> (V) -> T): (U, V) -> T = { a, b -> f(a)(b) }
 
 // f(a)->b +++ f(b)->c === f(a)->c
-fun compose(fa: (Int) -> String, fb: (String) -> Int): (Int) -> Int = { x -> fb(fa(x)) }
+fun <U, V, T> compose(fa: (U) -> V, fb: (V) -> T): (U) -> T = { x -> fb(fa(x)) }
 
 fun main() {
     //println(fact2(5))
+
+    val fixPersonAge40 = funFix(40, ::printPersonAge)
+    val fixBorisAge = fixPersonAge40("Boris")
+    println(fixBorisAge)
+
     println(
-        addFix42(42) { a, b -> add(a, b) }(2)
+        funFix(42) { a, b: Int -> add(a, b) }(2)
     )
+
+    val curryPerson = curry { age: Int, name: String -> printPersonAge(age, name) }
+    val curryPersonAge50 = curryPerson(50)
+    val curryPersonNikolay = curryPersonAge50("Nikolay")
+    println(curryPersonNikolay)
+
+    val uncurryPerson = uncurry(curryPerson)
+    println(
+        uncurryPerson(42, "Petr")
+    )
+
     val fix42 = curry(::add)(42)
     println(
         "" + fix42(3) + " " + fix42(2)
