@@ -39,24 +39,6 @@ fun <T> MyList<T>.length1(): Int {
 
 fun <T> MyList<T>.length(): Int = foldRight(0) { _, a -> a + 1 }
 
-//[1,2,3]
-// f(1, f(2, f(3, b)))
-
-// foldLeft
-// f(3, f(2, f(1, b)))
-
-fun <T, V> MyList<T>.foldLeft(v: V, f: (T, V) -> V): V {
-    tailrec fun go(v: V, f: (T, V) -> V, list: MyList<T>): V = when (list) {
-        is Empty -> v
-        is Cons -> go(f(list.value, v), f, list.tail)
-    }
-    return go(v, f, this)
-
-//    is Empty -> v
-//    is Cons -> f(this.value, this.tail.foldRight(v, f))
-}
-
-
 //fun <T> drop1(n: Int, list: MyList<T>): MyList<T> = when {
 //    n <= 0 -> list
 //    else -> when (list) {
@@ -108,28 +90,6 @@ fun <T> MyList<T>.addFirst(value: T): MyList<T> = when (this) {
     is Empty -> Cons(value, Empty() as MyList<T>)
 }
 
-fun <T> MyList<T>.appendShivorotNaVivorot(newList: MyList<T>): MyList<T> {
-    tailrec fun go(newList: MyList<T>, list: MyList<T>): MyList<T> = when (list) {
-        is Cons -> when (newList) {
-            is Empty -> list
-            is Cons -> go(newList.drop2(1), Cons(newList.value, list))
-        }
-        is Empty -> newList
-    }
-    return go(newList, this)
-}
-
-fun <T> MyList<T>.appendDoubleReverse(newList: MyList<T>): MyList<T> {
-    tailrec fun go(accumulator: MyList<T>, newList: MyList<T>, list: MyList<T>): MyList<T> = when (newList) {
-        is Cons -> go(Cons(newList.value, accumulator), newList.drop2(1), list)
-        is Empty -> when (list) {
-            is Empty -> accumulator
-            is Cons -> go(Cons(list.value, accumulator), newList, list.drop2(1))
-        }
-    }
-    return go(Empty() as MyList<T>, newList.reverse(), this.reverse())
-}
-
 fun <T> MyList<T>.append22(newList: MyList<T>): MyList<T> = when (this) {
     is Cons -> when (this.tail) {
         is Empty -> Cons(this.value, newList)
@@ -142,6 +102,13 @@ fun <T> MyList<T>.append(newList: MyList<T>): MyList<T> = when (this) {
     is Cons -> Cons(this.value, this.tail.append(newList))
     is Empty -> newList
 }
+
+fun <T> MyList<T>.appendFoldRight(newList: MyList<T>): MyList<T> = foldRight(newList) { i, a -> Cons(i, a) }
+//is Empty -> v
+//is Cons -> f(this.value, this.tail.foldRight(v, f))
+
+
+fun <T> MyList<T>.appendFoldLeft(newList: MyList<T>): MyList<T> = foldLeft(newList) { i, a -> a.}
 
 fun <T> MyList<T>.appendFirst(newList: MyList<T>): MyList<T> {
     tailrec fun go(accumulator: MyList<T>, newList: MyList<T>): MyList<T> = when (newList) {
@@ -174,6 +141,7 @@ fun <T> MyList<T>.reverse1(): MyList<T> {
 
 fun <T> MyList<T>.reverse(): MyList<T> = foldLeft(Empty() as MyList<T>) { i, a -> Cons(i, a) }
 
+fun MyList<out Int>.sumL(): Int = foldLeft(0) { i, a -> i + a }
 fun MyList<out Int>.sum(): Int = foldRight(0) { i, a -> i + a }
 //    when (this) {
 //    is Empty -> 0
@@ -186,7 +154,8 @@ fun MyList<out Int>.product(): Int = foldRight(1) { i, a -> i * a }
 //    is Cons -> this.value * this.tail.product()
 //}
 
-fun MyList<out String>.concat(): String = foldRight("") { i, a -> i + a }
+fun MyList<out String>.concatL(): String = foldLeft("_") { i, a -> a + i }
+fun MyList<out String>.concat(): String = foldRight("_") { i, a -> i + a }
 //    when (this) {
 //    is Empty -> ""
 //    is Cons -> this.value + this.tail.concat()
@@ -197,46 +166,34 @@ fun <T, V> MyList<T>.foldRight(v: V, f: (T, V) -> V): V = when (this) {
     is Cons -> f(this.value, this.tail.foldRight(v, f))
 }
 
+//[1,2,3]
+// f(1, f(2, f(3, b)))
+
+// foldLeft
+// f(3, f(2, f(1, b)))
+
+fun <T, V> MyList<T>.foldLeft(v: V, f: (T, V) -> V): V {
+    tailrec fun go(v: V, f: (T, V) -> V, list: MyList<T>): V = when (list) {
+        is Empty -> v
+        is Cons -> go(f(list.value, v), f, list.tail)
+    }
+    return go(v, f, this)
+}
+
 //fun <Int>MyList<Int>.sum(): kotlin.Int = when (this) {
 //    is Empty -> 0
 //    is Cons -> this.value + this.tail.sum()
 //}
 
-
 fun main() {
-//    println("+++")
-//    val first = MyList.of(1, 2, 3)
-//    val dropped = first.drop(1)
-//    dropped.forEach { println(it) }
-//    println("+++")
-//    val subList = first.subList(first.length() - 1)
-//    subList.forEach { println(it) }
-//    println("----------------")
+//    val list = MyList.of("1", "2", "3")
+//    println("R: ${list.concat()}")
+//    println("L: ${list.concatL()}")
 
-//    val reverse = first.reverse().addFirst(4).reverse()
-//    reverse.forEach { println(it) }
-//    val second = MyList.of(3)
-//    val result = plus(first, second)
-//    result.forEach { println(it) }
-//    println("++++++++++++")
     val list = MyList.of(1, 2, 3, 4, 5)
-//    println("=== initial list")
-//    list.forEach { println(it) }
-//    println("===")
-//    println(list.length())
-//    val list2 = list.drop2(1)
-//    println(list2.length())
-//    val list3 = list.dropWhile { it < 3 }
-//    println(list3.length())
-    println("===")
     val newList = MyList.of(6, 7, 8)
-    val list4 = list.append(newList)
+    val list4 = list.appendFoldLeft(newList)
     list4.forEach { println(it) }
-//    val list5 = list4.add(9)
-//    list5.forEach { println(it) }
-
-    val sum = newList.sum()
-    println("sum is $sum")
 }
 
 
