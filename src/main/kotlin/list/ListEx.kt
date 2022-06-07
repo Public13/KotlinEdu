@@ -108,7 +108,21 @@ fun <T> MyList<T>.appendFoldRight(newList: MyList<T>): MyList<T> = foldRight(new
 //is Cons -> f(this.value, this.tail.foldRight(v, f))
 
 
-fun <T> MyList<T>.appendFoldLeft(newList: MyList<T>): MyList<T> = foldLeft(newList) { i, a -> a.}
+fun <T> MyList<T>.appendFoldLeft(newList: MyList<T>): MyList<T> = foldLeft(newList) { i, a ->
+    println("i = $i")
+    println("a:")
+    a.forEach { println(it) }
+    println("====")
+    Cons(
+        i, when (this) {
+            is Empty -> a
+            is Cons -> when (this.tail) {
+                is Empty -> a
+                is Cons -> Cons(this.value, this.tail)
+            }
+        }
+    )
+}
 
 fun <T> MyList<T>.appendFirst(newList: MyList<T>): MyList<T> {
     tailrec fun go(accumulator: MyList<T>, newList: MyList<T>): MyList<T> = when (newList) {
@@ -190,7 +204,8 @@ fun main() {
 //    println("R: ${list.concat()}")
 //    println("L: ${list.concatL()}")
 
-    val list = MyList.of(1, 2, 3, 4, 5)
+    //val list = MyList.of(1, 2, 3, 4, 5)
+    val list = MyList.of(1, 2)
     val newList = MyList.of(6, 7, 8)
     val list4 = list.appendFoldLeft(newList)
     list4.forEach { println(it) }
