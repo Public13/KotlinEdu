@@ -118,9 +118,6 @@ fun MyList<out Int>.sumL(): Int = foldLeft(0) { i, a -> i + a }
 fun MyList<out Int>.sum(): Int = foldRight(0) { i, a -> i + a }
 fun MyList<out Int>.product(): Int = foldRight(1) { i, a -> i * a }
 
-fun MyList<out String>.concatL(): String = foldLeft("_") { i, a -> a + i }
-
-fun MyList<out String>.concat(): String = foldRight("_") { i, a -> i + a }
 fun <T, V> MyList<T>.foldRight(v: V, f: (T, V) -> V): V = when (this) {
     is Empty -> v
     is Cons -> f(this.value, this.tail.foldRight(v, f))
@@ -129,12 +126,7 @@ fun <T, V> MyList<T>.foldRight(v: V, f: (T, V) -> V): V = when (this) {
 // https://stackoverflow.com/questions/17136794/foldleft-using-foldright-in-scala
 // https://medium.com/@juntomioka/why-foldright-is-beautiful-7854ede3e133
 
-fun <T, V> MyList<T>.foldRightViaFoldLeft(v: V, f: (T, V) -> V): V = foldLeft({ v1: V -> v1 }) { i, a -> { v2 -> a(f(i, v2)) } }(v)
-
 // 1,2,3 (0)
-//1. v1= (v)->V, => (v)-> a( f(1, v))
-//2. (v) -> f(1, f(2,v))
-//3.
 
 fun <T, V> MyList<T>.foldLeft(v: V, f: (T, V) -> V): V {
     tailrec fun go(v: V, f: (T, V) -> V, list: MyList<T>): V = when (list) {
@@ -143,9 +135,6 @@ fun <T, V> MyList<T>.foldLeft(v: V, f: (T, V) -> V): V {
     }
     return go(v, f, this)
 }
-
-fun <T> MyList<T>.appendFoldRight(newList: MyList<T>): MyList<T> = foldRight(newList) { i, a -> Cons(i, a) }
-
 
 // foldLeft
 // f(3, f(2, f(1, b)))
@@ -165,6 +154,7 @@ fun <T> MyList<T>.appendFoldRight(newList: MyList<T>): MyList<T> = foldRight(new
 //}
 fun <T> MyList<T>.appendFoldLeft(newList: MyList<T>): MyList<T> = reverse().foldLeft(newList) { i, a -> Cons(i, a) }
 
+fun <T> MyList<T>.appendFoldRight(newList: MyList<T>): MyList<T> = foldRight(newList) { i, a -> Cons(i, a) }
 
 fun <T> concat(list: MyList<MyList<T>>): MyList<T> = list.foldRight(Empty() as MyList<T>) { i, a -> i.appendFoldLeft(a) }
 
@@ -186,22 +176,56 @@ fun <T> MyList<T>.filterFM(f: (T) -> Boolean): MyList<T> = flatMap {
 
 fun <T, V> MyList<T>.flatMap(f: (T) -> MyList<V>): MyList<V> = foldRight(Empty() as MyList<V>) { i, a -> f(i).append(a) }
 
+//3.
+//2. (v) -> f(1, f(2,v))
+//1. v1= (v)->V, => (v)-> a( f(1, v))
+fun <T, V> MyList<T>.foldRightViaFoldLeft(v: V, f: (T, V) -> V): V = foldLeft({ v1: V -> v1 }) { i, a -> { v2: V ->
+    println(i)
+    a(f(i, v2))
+} }(v)
+
+fun <T, V> MyList<T>.foldLeftViaFoldRight(v: V, f: (T, V) -> V): V = foldRight({ v1: V -> v1 }) { i, a -> { v2: V ->
+    println(i)
+    a(f(i, v2))
+} }(v)
+
+fun MyList<out String>.concat(): String = foldRight("_") { i, a ->
+    //println(i)
+    i + a
+}
+fun MyList<out String>.concatL(): String = foldLeft("_") { i, a ->
+    //println(i)
+    i + a
+}
+
+fun MyList<out String>.concatV(): String = foldRightViaFoldLeft("_") { i, a ->
+    //println(i)
+    i + a
+}
+fun MyList<out String>.concatVL(): String = foldLeftViaFoldRight("_") { i, a ->
+    println(i)
+    i + a
+}
+
 fun main() {
-//    val list = MyList.of("1", "2", "3")
-//    println("R: ${list.concat()}")
-//    println("L: ${list.concatL()}")
+    val list = MyList.of("1", "2", "3")
+    println("R: ${list.concat()}")
+    println("L: ${list.concatL()}")
+
+    println("VR: ${list.concatV()}")
+    println("VL: ${list.concatVL()}")
 
     //val list = MyList.of(1, 2, 3, 4, 5)
     //val list = MyList.of(1, 2)
     //val list = Empty() as MyList<Int>
 
-    val list = MyList.of(1, 2, 3)
+//    val list = MyList.of(1, 2, 3)
 //    val newList = MyList.of(6, 7, 8)
 //    val list4 = list.appendFoldLeft(newList)
 //    val lists = MyList.of(MyList.of(1, 2), MyList.of(3, 4), MyList.of(5, 6))
-    val list4 = list.map { it + 10 }.flatMap { MyList.of(it, it) }.filterFM { it > 11 }
+//    val list4 = list.map { it + 10 }.flatMap { MyList.of(it, it) }.filterFM { it > 11 }
     //val list5 = list4.filter { it == 12 }
-    list4.forEach { println(it) }
+//    list4.forEach { println(it) }
 }
 
 
