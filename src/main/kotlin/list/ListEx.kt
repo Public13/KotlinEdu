@@ -235,6 +235,13 @@ fun <T, V> MyList<T>.map_(f: (T) -> V): MyList<V> = foldR(Empty() as MyList<V>) 
 
 fun <T, V> MyList<T>.flatMap_(f: (T) -> MyList<V>): MyList<V> = foldR(Empty() as MyList<V>) { i, a -> f(i).append_(a) }
 
+// 0445 [1,2,3] (i0->[i,i]) => [1,1,2,2,3,3]
+//O1 flatMap O2
+//
+//O1->Empty = Empty()
+//O1->Value, O2->Nothing = Nothing
+//O1->VALUE, O2->Value = Value
+
 fun <T> MyList<T>.filter_(f: (T) -> Boolean): MyList<T> = foldR(Empty() as MyList<T>) { i, a ->
     when (f(i)) {
         true -> Cons(i, a)
@@ -249,16 +256,58 @@ fun <T> MyList<T>.filter_fm(f: (T) -> Boolean): MyList<T> = flatMap_ {
     }
 }
 
+fun <T, V, Z> MyList<T>.zipWith(otherList: MyList<V>, f: (T, V) -> Z): MyList<Z> = when (this) {
+    is Empty -> Empty() as MyList<Z>
+    is Cons -> when (otherList) {
+        is Empty -> Empty() as MyList<Z>
+        is Cons -> Cons(f(this.value, otherList.value), this.tail.zipWith(otherList.tail, f))
+    }
+}
+
+fun <T> MyList<T>.hasSubSequence1(otherList: MyList<T>): Boolean = when (otherList) {
+    is Empty -> true
+    is Cons -> when (this) {
+        is Empty -> false
+        is Cons -> when (otherList.value == this.value) {
+            true -> otherList.tail.hasSubSequence(this.tail)
+            false -> otherList.hasSubSequence(this.tail)
+        }
+    }
+}
+
+fun <T> MyList<T>.hasSubSequence(otherList: MyList<T>): Boolean {
+    fun go(mainList: MyList<T>, subList: MyList<T>, res: Boolean): Boolean {
+        return when (subList) {
+            is Empty -> res
+            is Cons -> when (mainList) {
+                is Empty -> false
+                is Cons -> when (subList.value == mainList.value) {
+                    true -> go(mainList.tail, subList.tail, true)
+                    false -> go(mainList.tail, subList, false)
+                }
+            }
+        }
+    }
+    return go(this, otherList, false)
+}
+
 fun main() {
-    val slist = MyList.of("1", "2", "3").append_(MyList.of("4", "5")).map_ { it + "_" }.flatMap_ { MyList.of(it, it) }.filter_fm { it == "4_" }
-    slist.forEach { println(it) }
+    val mainList = MyList.of(1, 2, 3, 4, 5, 6)
+    val subList = MyList.of(3, 4, 5, 6)
+    println(mainList.hasSubSequence(subList))
 
-    val list = MyList.of("1", "2", "3")
-    println("R: ${list.concat()}")
-    println("L: ${list.concatL()}")
-
-    println("VR: ${list.concatV()}")
-    println("VL: ${list.concatVL()}")
+//    val slist = MyList.of("1", "2", "3")
+//        .append_(MyList.of("4", "5")).map_ { it + "_" }
+//        .flatMap_ { MyList.of(it, it) }.filter_fm { it == "4_" }
+//        .zipWith(MyList.of("6")) { a, b -> a + b }
+//    slist.forEach { println(it) }
+//
+//    val list = MyList.of("1", "2", "3")
+//    println("R: ${list.concat()}")
+//    println("L: ${list.concatL()}")
+//
+//    println("VR: ${list.concatV()}")
+//    println("VL: ${list.concatVL()}")
 
     //val list = MyList.of(1, 2, 3, 4, 5)
     //val list = MyList.of(1, 2)
@@ -282,3 +331,5 @@ fun main() {
 // стрелка Клейсли
 // foldLeft через foldRight (конструирование лямбд)
 // оптионал, айза
+
+// hasSubSequence (list): true\false

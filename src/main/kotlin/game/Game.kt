@@ -1,8 +1,4 @@
-package game
-//sealed class Optional<T>
-//class None<T> : Optional<T>()
-//class Some<T>(val value: T) : Optional<T>()
-//
+
 //fun parseInt(s: String): Optional<Int> {
 //    return try {
 //        Some(s.toInt())
