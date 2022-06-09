@@ -179,22 +179,27 @@ fun <T, V> MyList<T>.flatMap(f: (T) -> MyList<V>): MyList<V> = foldRight(Empty()
 //3.
 //2. (v) -> f(1, f(2,v))
 //1. v1= (v)->V, => (v)-> a( f(1, v))
-fun <T, V> MyList<T>.foldRightViaFoldLeft(v: V, f: (T, V) -> V): V = foldLeft({ v1: V -> v1 }) { i, a -> { v2: V ->
-    println(i)
-    a(f(i, v2))
-} }(v)
+fun <T, V> MyList<T>.foldRightViaFoldLeft(v: V, f: (T, V) -> V): V = foldLeft({ v1: V -> v1 }) { i, a ->
+    { v2: V ->
+        println(i)
+        a(f(i, v2))
+    }
+}(v)
 
-fun <T, V> MyList<T>.foldLeftViaFoldRight(v: V, f: (T, V) -> V): V = foldRight({ v1: V -> v1 }) { i, a -> { v2: V ->
-    println(i)
-    a(f(i, v2))
-} }(v)
+fun <T, V> MyList<T>.foldLeftViaFoldRight(v: V, f: (T, V) -> V): V = foldRight({ v1: V -> v1 }) { i, a ->
+    { v2: V ->
+        //println(i)
+        a(f(i, v2))
+    }
+}(v)
 
 fun MyList<out String>.concat(): String = foldRight("_") { i, a ->
     //println(i)
     i + a
 }
+
 fun MyList<out String>.concatL(): String = foldLeft("_") { i, a ->
-    //println(i)
+    println(i)
     i + a
 }
 
@@ -202,12 +207,52 @@ fun MyList<out String>.concatV(): String = foldRightViaFoldLeft("_") { i, a ->
     //println(i)
     i + a
 }
+
 fun MyList<out String>.concatVL(): String = foldLeftViaFoldRight("_") { i, a ->
     println(i)
     i + a
 }
 
+fun <T, V> MyList<T>.foldL(v: V, f: (T, V) -> V): V = when (this) {
+    is Empty -> v
+    is Cons -> this.tail.foldL(f(this.value, v), f)
+}
+
+fun <T, V> MyList<T>.foldR(v: V, f: (T, V) -> V): V = when (this) {
+    is Empty -> v
+    is Cons -> f(this.value, this.tail.foldR(v, f))
+}
+
+fun MyList<out String>.summ(): String = foldRight("_") { i, a -> i + a }
+
+fun <T> MyList<T>.append_(newList: MyList<T>): MyList<T> = foldRvL(newList) { i, a -> Cons(i, a) }
+
+fun <T, V> MyList<T>.foldRvL(v: V, f: (T, V) -> V): V = foldL({ v1: V -> v1 }) { i, a -> { v2: V -> a(f(i, v2)) } }(v)
+
+fun <T, V> MyList<T>.foldLvR(v: V, f: (T, V) -> V): V = foldR({ v1: V -> v1 }) { i, a -> { v2: V -> a(f(i, v2)) } }(v)
+
+fun <T, V> MyList<T>.map_(f: (T) -> V): MyList<V> = foldR(Empty() as MyList<V>) { i, a -> Cons(f(i), a) }
+
+fun <T, V> MyList<T>.flatMap_(f: (T) -> MyList<V>): MyList<V> = foldR(Empty() as MyList<V>) { i, a -> f(i).append_(a) }
+
+fun <T> MyList<T>.filter_(f: (T) -> Boolean): MyList<T> = foldR(Empty() as MyList<T>) { i, a ->
+    when (f(i)) {
+        true -> Cons(i, a)
+        false -> a
+    }
+}
+
+fun <T> MyList<T>.filter_fm(f: (T) -> Boolean): MyList<T> = flatMap_ {
+    when (f(it)) {
+        true -> Cons(it, Empty() as MyList<T>)
+        false -> Empty() as MyList<T>
+    }
+}
+
 fun main() {
+    val slist = MyList.of("1", "2", "3").append_(MyList.of("4", "5")).map_ { it + "_" }.flatMap_ { MyList.of(it, it) }.filter_fm { it == "4_" }
+    slist.forEach { println(it) }
+
     val list = MyList.of("1", "2", "3")
     println("R: ${list.concat()}")
     println("L: ${list.concatL()}")
