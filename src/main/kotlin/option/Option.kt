@@ -1,7 +1,5 @@
 package option
 
-import list.*
-
 sealed class Option<T> {
     companion object {
         fun <T> of(value: T?) = when (value == null) {
@@ -52,6 +50,26 @@ fun <T, V, R> map2(a: Option<T>, b: Option<V>, f: (T, V) -> R): Option<R> =
         }
     }
 
+fun <T, V, Z, R> map3(a: Option<T>, b: Option<V>, c: Option<Z>, f: (T, V, Z) -> R): Option<R> =
+    a.flatMap { av ->
+        b.flatMap { bv ->
+            c.map { cv ->
+                f(av, bv, cv)
+            }
+        }
+    }
+
+fun <T, V, Z, U, R> map4(a: Option<T>, b: Option<V>, c: Option<Z>, d: Option<U>, f: (T, V, Z, U) -> R): Option<R> =
+    a.flatMap { av ->
+        b.flatMap { bv ->
+            c.flatMap { cv ->
+                d.map { dv ->
+                    f(av, bv, cv, dv)
+                }
+            }
+        }
+    }
+
 //fun <T, V> MyList<T>.traverse(f: (T) -> Option<V>): Option<MyList<V>> = map(f).foldRight(Some(Empty() as MyList<V>)) {i, a -> when (i){
 //    is None -> None() as Option<MyList<V>>
 //    is Some ->
@@ -62,7 +80,7 @@ fun toLowerCase(str: String): String = str.lowercase()
 fun main() {
     val toLowerCaseOp = lift { a: String -> toLowerCase(a) }
 
-    println(toLowerCaseOp.invoke(Option.of("dd") as Option<String>).getOrElse { "fuck" })
+    println(toLowerCaseOp.invoke(Option.of("dd") as Option<String>).getOrElse { "funk" })
 }
 
 // map3
