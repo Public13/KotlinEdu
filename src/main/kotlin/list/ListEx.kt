@@ -264,17 +264,6 @@ fun <T, V, Z> MyList<T>.zipWith(otherList: MyList<V>, f: (T, V) -> Z): MyList<Z>
     }
 }
 
-fun <T> MyList<T>.hasSubSequence1(otherList: MyList<T>): Boolean = when (otherList) {
-    is Empty -> true
-    is Cons -> when (this) {
-        is Empty -> false
-        is Cons -> when (otherList.value == this.value) {
-            true -> otherList.tail.hasSubSequence(this.tail)
-            false -> otherList.hasSubSequence(this.tail)
-        }
-    }
-}
-
 fun <T> MyList<T>.hasSubSequence(otherList: MyList<T>): Boolean {
     fun go(mainList: MyList<T>, subList: MyList<T>, res: Boolean): Boolean {
         return when (subList) {
@@ -291,10 +280,96 @@ fun <T> MyList<T>.hasSubSequence(otherList: MyList<T>): Boolean {
     return go(this, otherList, false)
 }
 
+// --- hasSubSequence with startsWith T
+fun <T> MyList<T>.startsWith(v: T): Boolean = when (this) {
+    is Empty -> false
+    is Cons -> {
+        println("compare ${this.value} and $v returning ${this.value == v}")
+        this.value == v
+    }
+}
+
+fun <T> MyList<T>.hasSubSequenceFromHead(otherList: MyList<T>): Boolean = when (this) {
+    is Empty -> when (otherList) {
+        is Empty -> {
+            println("this list is empty and other list is empty, return true")
+            true
+        }
+        is Cons -> {
+            println("this list is empty but other list is not empty, return false")
+            false
+        }
+    }
+    is Cons -> when (otherList) {
+        is Empty -> {
+            println("this list is empty, return true")
+            true
+        }
+        is Cons -> when (this.value == otherList.value) {
+            true -> {
+                println("this value ${this.value} == other value ${otherList.value}. continue recursion hasSubSequenceFromHead tails")
+                this.tail.hasSubSequenceFromHead(otherList.tail)
+            }
+            false -> {
+                println("this value ${this.value} != other value ${otherList.value}. return false")
+                false
+            }
+        }
+    }
+}
+
+fun <T> MyList<T>.hasSubSequence1(otherList: MyList<T>): Boolean = when (this) {
+    is Empty -> false
+    is Cons -> when (otherList) {
+        is Empty -> true
+        is Cons -> when (this.startsWith(otherList.value)) {
+            false -> this.tail.hasSubSequence1(otherList)
+            true -> when (this.hasSubSequenceFromHead(otherList)) {
+                true -> true
+                false -> when (this.tail) {
+                    is Empty -> false
+                    is Cons -> this.tail.hasSubSequence1(otherList)
+                }
+            }
+        }
+    }
+}
+// --- end of hasSubSequence with startsWith T
+
+// --- hasSubSequence with startsWith MyList<T>
+fun <T> MyList<T>.startsWith(stList: MyList<T>): Boolean = when (this) {
+    is Empty -> when (stList) {
+        is Empty -> true
+        is Cons -> false
+    }
+    is Cons -> when (stList) {
+        is Empty -> true
+        is Cons -> {
+            println("compare ${this.value} and ${stList.value} returning ${this.value == stList.value}")
+            when (this.value == stList.value) {
+                false -> false
+                true -> this.tail.startsWith(stList.tail)
+            }
+        }
+    }
+}
+
+fun <T> MyList<T>.hasSubSequence2(otherList: MyList<T>): Boolean = when (this) {
+    is Empty -> false
+    is Cons -> when (otherList) {
+        is Empty -> true
+        is Cons -> when (this.startsWith(otherList)) {
+            true -> true
+            false -> this.tail.hasSubSequence2(otherList)
+        }
+    }
+}
+// --- end of hasSubSequence with startsWith MyList<T>
+
 fun main() {
-    val mainList = MyList.of(1, 2, 3, 4, 5, 6)
-    val subList = MyList.of(3, 4, 5, 6)
-    println(mainList.hasSubSequence(subList))
+    val mainList = MyList.of(1, 2, 1, 2, 3)
+    val subList = MyList.of(1, 2, 3)
+    println("result: ${mainList.hasSubSequence2(subList)}")
 
 //    val slist = MyList.of("1", "2", "3")
 //        .append_(MyList.of("4", "5")).map_ { it + "_" }
