@@ -1,5 +1,7 @@
 package option
 
+import list.*
+
 sealed class Option<T> {
     companion object {
         fun <T> of(value: T?) = when (value == null) {
@@ -70,17 +72,25 @@ fun <T, V, Z, U, R> map4(a: Option<T>, b: Option<V>, c: Option<Z>, d: Option<U>,
         }
     }
 
-//fun <T, V> MyList<T>.traverse(f: (T) -> Option<V>): Option<MyList<V>> = map(f).foldRight(Some(Empty() as MyList<V>)) {i, a -> when (i){
-//    is None -> None() as Option<MyList<V>>
-//    is Some ->
-//} }
+fun <T, V> MyList<T>.traverse(f: (T) -> Option<V>): Option<MyList<V>> =
+    map(f)
+        .foldRight(Some(Empty() as MyList<V>)) { i, a ->
+            when (i) {
+                //is None -> None() as Option<MyList<V>>
+                is None -> Some(a.value)
+                is Some -> Some(Cons(i.value, a.value))
+            }
+        }
 
 fun toLowerCase(str: String): String = str.lowercase()
 
 fun main() {
-    val toLowerCaseOp = lift { a: String -> toLowerCase(a) }
+//    val toLowerCaseOp = lift { a: String -> toLowerCase(a) }
+//    println(toLowerCaseOp.invoke(Option.of("dd") as Option<String>).getOrElse { "funk" })
 
-    println(toLowerCaseOp.invoke(Option.of("dd") as Option<String>).getOrElse { "funk" })
+    val list = MyList.of(1, 2, 3, 4, 5)
+    val tOption = list.traverse { Option.of(it) }
+    println("===")
 }
 
 // map3
