@@ -370,6 +370,8 @@ fun main() {
     val mainList = MyList.of(1, 2, 1, 2, 3)
     val subList = MyList.of(1, 2, 3)
     println("result: ${mainList.hasSubSequence2(subList)}")
+    println("=== drop")
+    subList.drop(1).forEach { println(it) }
 
 //    val slist = MyList.of("1", "2", "3")
 //        .append_(MyList.of("4", "5")).map_ { it + "_" }
