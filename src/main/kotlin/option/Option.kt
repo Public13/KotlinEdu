@@ -1,6 +1,9 @@
 package option
 
-import list.*
+import list.Cons
+import list.Empty
+import list.MyList
+import list.foldRight
 
 sealed class Option<T> {
     companion object {
@@ -72,15 +75,21 @@ fun <T, V, Z, U, R> map4(a: Option<T>, b: Option<V>, c: Option<Z>, d: Option<U>,
         }
     }
 
+// разобрать
 fun <T, V> MyList<T>.traverse(f: (T) -> Option<V>): Option<MyList<V>> =
-    map(f)
-        .foldRight(Some(Empty() as MyList<V>)) { i, a ->
-            when (i) {
-                //is None -> None() as Option<MyList<V>>
-                is None -> Some(a.value)
-                is Some -> Some(Cons(i.value, a.value))
-            }
+    foldRight(Some(Empty()) as Option<MyList<V>>) { i, a ->
+        map2(f(i), a) { iv, av ->
+            Cons(iv, av)
         }
+//        when (val t = map(f(i))) {
+//            is None -> None() as Option<MyList<V>>
+//            //is None -> Some(a.value)
+//            is Some<MyList<V>> -> when (a) {
+//                is None -> None() as Option<MyList<V>>
+//                is Some<MyList<V>> -> Some(Cons(t.value, a.value))
+//            }
+//        }
+    }
 
 fun toLowerCase(str: String): String = str.lowercase()
 

@@ -388,11 +388,11 @@ fun main() {
     //val list = MyList.of(1, 2)
     //val list = Empty() as MyList<Int>
 
-//    val list = MyList.of(1, 2, 3)
+    val list = MyList.of(1, 2, 3)
 //    val newList = MyList.of(6, 7, 8)
 //    val list4 = list.appendFoldLeft(newList)
 //    val lists = MyList.of(MyList.of(1, 2), MyList.of(3, 4), MyList.of(5, 6))
-//    val list4 = list.map { it + 10 }.flatMap { MyList.of(it, it) }.filterFM { it > 11 }
+    val list4 = list.map { it + 10 }.flatMap { MyList.of(it, it) }.filterFM { it > 11 }
     //val list5 = list4.filter { it == 12 }
 //    list4.forEach { println(it) }
 }
