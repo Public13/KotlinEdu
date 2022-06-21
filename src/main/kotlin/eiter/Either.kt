@@ -14,10 +14,10 @@ sealed class Either<out E, out V> {
     class Right<V>(val value: V) : Either<Nothing, V>()
 }
 
-fun <A> catches(f: () -> A): Either<Exception, A> {
+fun <A> catches(f: () -> A): Either<Throwable, A> {
     return try {
         Either.Right(f())
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
         Either.Left(e)
     }
 }
@@ -74,9 +74,9 @@ fun testBad(a: Int, b: Int): Int {
 }
 
 fun main() {
-    val res: Either<Exception, Int> = catches { test(1, 2) }
+    val res: Either<Throwable, Int> = catches { test(1, 2) }
     // поборолись с компилятором
-    val resBad: Either<Exception, Int> = catches { testBad(1, 2) }
+    val resBad: Either<Throwable, Int> = catches { testBad(1, 2) }
     print("good: ")
     println(res.orElse { 300 })
     print("bad: ")

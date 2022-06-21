@@ -94,7 +94,7 @@ fun <T, V> Stream<T>.flatMap(f: (T) -> Stream<V>): Stream<V> = foldRight({ Strea
 
 fun main() {
     val stream = Stream.of(2, 2, 5, 1)
-    stream.toList().forEach { println(it) }
+    stream.take(3).toList().forEach { println(it) }
 
 //    println("=== sum")
 //    println(stream.sum())
