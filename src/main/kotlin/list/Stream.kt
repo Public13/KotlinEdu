@@ -25,7 +25,10 @@ fun <T> Stream<T>.take(n: Int): Stream<T> = when {
     n <= 0 -> Stream.Empty()
     else -> when (this) {
         is Stream.Empty -> this
-        is Stream.Cons -> Stream.Cons(this.value) { this.tail().take(n - 1) }
+        is Stream.Cons -> {
+            println("do take")
+            Stream.Cons(this.value) { this.tail().take(n - 1) }
+        }
     }
 }
 
@@ -44,7 +47,7 @@ fun <T> Stream<T>.drop(n: Int): Stream<T> = when {
     else -> when (this) {
         is Stream.Empty -> this
         is Stream.Cons -> {
-            println("drop ${this.value()}")
+            println("do drop ${this.value()}")
             this.tail().drop(n - 1)
         }
     }
@@ -68,9 +71,13 @@ fun <T> Stream<T>.takeWhileFl(f: (T) -> Boolean): Stream<T> = foldRight({ Stream
 
 fun <T> Stream<T>.headOption(): Option<T> = foldRight({ None() as Option<T> }) { i, _ -> Some(i) }
 
-fun <T, V> Stream<T>.map(f: (T) -> V): Stream<V> = foldRight({ Stream.Empty() as Stream<V> }) { i, acc -> Stream.Cons({ f(i) }) { acc() } }
+fun <T, V> Stream<T>.map(f: (T) -> V): Stream<V> = foldRight({ Stream.Empty() as Stream<V> }) { i, acc ->
+    println("do map")
+    Stream.Cons({ f(i) }) { acc() }
+}
 
 fun <T> Stream<T>.filter(f: (T) -> Boolean): Stream<T> = foldRight({ Stream.Empty() as Stream<T> }) { i, acc ->
+    println("do filter")
     when (f(i)) {
         true -> Stream.Cons({ i }, acc)
         false -> acc()
