@@ -7,6 +7,7 @@ import list.foldRight
 import option.None
 import option.Option
 import option.Some
+import option.getOrElse
 
 sealed class Either<out E, out V> {
     class Left<E>(val value: E) : Either<E, Nothing>()
@@ -41,9 +42,10 @@ fun <E, V1, V2, R> map2(a: Either<E, V1>, b: Either<E, V2>, f: (V1, V2) -> R): E
 fun <E, V1, V2, R> flatMap2(a: Either<E, V1>, b: Either<E, V2>, f: (V1, V2) -> Either<E, R>): Either<E, R> =
     a.flatMap { av -> b.flatMap { bv -> f(av, bv) } }
 
-fun <E, V> Either<E, V>.orElse(f: (V) -> Option<V>): Option<V> = when (this) {
-    is Either.Left -> None() as Option<V>
-    is Either.Right -> f(this.value)
+// а правильная ли сигнатура? чего оно должно сделать, вернуть результат или вернуть какую-то другую Either?
+fun <E, V> Either<E, V>.orElse(f: (E) -> V): V = when (this) {
+    is Either.Left -> f(this.value)
+    is Either.Right -> this.value
 }
 
 fun <E, V> Either<E, V>.toOption(): Option<V> = when (this) {
@@ -63,6 +65,30 @@ fun <E, V> MyList<V>.traverse(f: (V) -> Either<E, V>): Either<E, MyList<V>> = fo
     }
 }
 
+fun test(a: Int, b: Int) = a + b
+
+// поборолись с компилятором
+fun testBad(a: Int, b: Int): Int {
+    a + b
+    throw java.lang.Exception("failed")
+}
+
+fun main() {
+    val res: Either<Exception, Int> = catches { test(1, 2) }
+    // поборолись с компилятором
+    val resBad: Either<Exception, Int> = catches { testBad(1, 2) }
+    print("good: ")
+    println(res.orElse { 300 })
+    print("bad: ")
+    println(resBad.orElse { 300 })
+    print("option good: ")
+    println(res.toOption().getOrElse { 300 })
+    print("option bad: ")
+    // поборолись с компилятором - теперь ОК
+    println(resBad.toOption().getOrElse { 300 })
+
+
+}
 
 //1. Монада Either (реализация)
 //1. map
