@@ -1,4 +1,4 @@
-package io
+package monad
 
 import option.None
 import option.Option

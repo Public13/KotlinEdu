@@ -1,4 +1,4 @@
-package eiter
+package monad
 
 import list.Cons
 import list.Empty
