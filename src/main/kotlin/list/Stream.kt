@@ -26,7 +26,7 @@ fun <T> Stream<T>.take(n: Int): Stream<T> = when {
     else -> when (this) {
         is Stream.Empty -> this
         is Stream.Cons -> {
-            println("do take")
+            //println("do take")
             Stream.Cons(this.value) { this.tail().take(n - 1) }
         }
     }
@@ -88,13 +88,30 @@ fun <T> Stream<T>.append(f: () -> Stream<T>): Stream<T> = foldRight(f) { i, acc 
 
 fun <T, V> Stream<T>.flatMap(f: (T) -> Stream<V>): Stream<V> = foldRight({ Stream.Empty() as Stream<V> }) { i, acc -> f(i).append(acc) }
 
-// Either
-// Left (error) (вложить)
-// Right (value)
+fun <A> constant1(a: A): Stream<A> = Stream.Cons({ a }) { constant(a) }
+
+fun from1(i: Int): Stream<Int> = Stream.Cons({ i }) { from1(i + 1) }
+
+fun fibs1(): Stream<Int> {
+    fun go(a: Int, b: Int): Stream<Int> = Stream.Cons({ a }) { go(b, a + b) }
+    return go(0, 1)
+}
+
+fun <A, S> unfold(s: S, f: (S) -> Option<Pair<A, S>>): Stream<A> = when (val o = f(s)) {
+    is Some -> Stream.Cons({ o.value.first }) { unfold(o.value.second, f) }
+    else -> Stream.Empty()
+}
+
+fun <A> constant(a: A): Stream<A> = unfold(a) { Some(it to it) }
+fun from(a: Int): Stream<Int> = unfold(a) { Some(it to it + 1) }
+fun fibs(): Stream<Int> = unfold(0 to 1) { s -> Some(Pair(s.second, s.first + s.second)) }
 
 fun main() {
-    val stream = Stream.of(2, 2, 5, 1)
-    stream.take(3).toList().forEach { println(it) }
+    //constant(1).take(6).toList().forEach { println(it) }
+
+    constant(1).take(8).toList().forEach { println(it) }
+//    val stream = Stream.of(2, 2, 5, 1)
+//    stream.take(3).toList().forEach { println(it) }
 
 //    println("=== sum")
 //    println(stream.sum())
@@ -102,8 +119,8 @@ fun main() {
 //    println("=== map")
 //    stream.map { it * 2 }.toList().forEach { println(it) }
 
-    println("=== filter")
-    stream.map { it * 2 }.filter { it > 4 }.toList().forEach { println(it) }
+//    println("=== filter")
+//    stream.map { it * 2 }.filter { it > 4 }.toList().forEach { println(it) }
 
 //    println("=== take")
 //    stream.take(2).toList().forEach { println(it) }
