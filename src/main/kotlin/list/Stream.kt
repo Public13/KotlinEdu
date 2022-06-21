@@ -103,13 +103,15 @@ fun <A, S> unfold(s: S, f: (S) -> Option<Pair<A, S>>): Stream<A> = when (val o =
 }
 
 fun <A> constant(a: A): Stream<A> = unfold(a) { Some(it to it) }
+
 fun from(a: Int): Stream<Int> = unfold(a) { Some(it to it + 1) }
-fun fibs(): Stream<Int> = unfold(0 to 1) { s -> Some(Pair(s.second, s.first + s.second)) }
+
+fun fibs(): Stream<Int> = unfold(1 to 0) { s -> Some(Pair(s.second, Pair(s.second, s.second + s.first))) }
 
 fun main() {
     //constant(1).take(6).toList().forEach { println(it) }
 
-    constant(1).take(8).toList().forEach { println(it) }
+    fibs().take(8).toList().forEach { println(it) }
 //    val stream = Stream.of(2, 2, 5, 1)
 //    stream.take(3).toList().forEach { println(it) }
 
