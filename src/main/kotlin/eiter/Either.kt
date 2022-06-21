@@ -1,5 +1,9 @@
 package eiter
 
+import list.Cons
+import list.Empty
+import list.MyList
+import list.foldRight
 import option.None
 import option.Option
 import option.Some
@@ -47,3 +51,28 @@ fun <E, V> Either<E, V>.toOption(): Option<V> = when (this) {
     is Either.Right -> Some(this.value)
 }
 
+fun <E, V> MyList<Either<E, V>>.sequence(): Either<E, MyList<V>> = foldRight(Either.Right(Empty()) as Either<E, MyList<V>>) { i, acc ->
+    map2(i, acc) { iv, ia ->
+        Cons(iv, ia)
+    }
+}
+
+fun <E, V> MyList<V>.traverse(f: (V) -> Either<E, V>): Either<E, MyList<V>> = foldRight(Either.Right(Empty()) as Either<E, MyList<V>>) { i, acc ->
+    map2(f(i), acc) { iv, av ->
+        Cons(iv, av)
+    }
+}
+
+
+//1. Монада Either (реализация)
+//1. map
+//2. flatMap
+//3. catches
+//4. orElse
+//5. map2
+//6. flatmap2
+//7. toOptional
+//8. sequence
+//9. traverse
+//10. Either comprehension
+//11. IO safeRun to Either
