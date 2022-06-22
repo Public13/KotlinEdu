@@ -1,7 +1,5 @@
 package monad
 
-import io.IO
-
 class Reader<C, T>(val runReader: (C) -> T) {
     fun <V> map(f: (T) -> V): Reader<C, V> = Reader { c -> f(runReader(c)) }
     fun <V> flatMap(f: (T) -> Reader<C, V>): Reader<C, V> = Reader { c -> f(runReader(c)).runReader(c) }
