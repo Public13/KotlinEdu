@@ -108,10 +108,37 @@ fun from(a: Int): Stream<Int> = unfold(a) { Some(it to it + 1) }
 
 fun fibs(): Stream<Int> = unfold(1 to 0) { s -> Some(Pair(s.second, Pair(s.second, s.second + s.first))) }
 
+fun <T, V> Stream<T>.mapUf(f: (T) -> V): Stream<V> = unfold(this) {
+    when (it) {
+        is Stream.Empty -> None() as Option<Pair<V, Stream<T>>>
+        is Stream.Cons -> Some(f(it.value()) to it.tail())
+    }
+}
+
+fun <T> Stream<T>.takeUf(n: Int): Stream<T> = unfold(n to this) {
+    when (it.first <= 0) {
+        true -> None() as Option<Pair<T, Pair<Int, Stream<T>>>>
+        false -> when (val st = it.second) {
+            is Stream.Empty -> None() as Option<Pair<T, Pair<Int, Stream<T>>>>
+            is Stream.Cons -> Some(Pair(st.value(), Pair(n - 1, st.tail().takeUf(n - 1))))
+        }
+    }
+}
+
+fun <T> Stream<T>.takeWhileUf(f: (T) -> Boolean): Stream<T> = unfold(this) {
+    when (it) {
+        is Stream.Empty -> None() as Option<Pair<T, Stream<T>>>
+        is Stream.Cons -> when (f(it.value())) {
+            true -> Some(Pair(it.value(), it.tail()))
+            false -> None() as Option<Pair<T, Stream<T>>>
+        }
+    }
+}
+
 fun main() {
     //constant(1).take(6).toList().forEach { println(it) }
 
-    fibs().take(8).toList().forEach { println(it) }
+    fibs().takeWhileUf { it <= 5 }.toList().forEach { println(it) }
 //    val stream = Stream.of(2, 2, 5, 1)
 //    stream.take(3).toList().forEach { println(it) }
 
