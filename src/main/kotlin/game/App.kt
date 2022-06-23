@@ -16,8 +16,6 @@ fun parseInt(str: String?): Option<out Int> = try {
     None() as Option<Int>
 }
 
-fun createRandomNumber(): IO<Int> = IO { (Math.random() * 10 % 5 + 1).toInt() }
-
 fun <C> C.askTheQuestion(str: String): IO<String>
     where C : Console =
     print(str).flatMap { read() }
@@ -63,6 +61,12 @@ fun <C> C.gameLoop(userName: String): IO<Unit>
 interface Console {
     fun print(str: String): IO<Unit>
     fun read(): IO<String>
+}
+
+fun createRandomNumber(): IO<Int> = IO { (Math.random() * 10 % 5 + 1).toInt() }
+
+interface Randomness {
+    fun createRandomNumber(): IO<Int>
 }
 
 fun main() {
