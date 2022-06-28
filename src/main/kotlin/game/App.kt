@@ -2,10 +2,51 @@
 
 package game
 
-import monad.IO
 import option.None
 import option.Option
 import option.Some
+
+interface Monad<K, T> {
+    fun unit(): Monad<K, Unit>
+    fun <V> map(f: (T) -> V): Monad<K, V>
+    fun <V> flatMap(f: Monad<K, T>.(T) -> Monad<K, V>): Monad<K, V>
+}
+
+class ForIO private constructor() {
+    companion object
+}
+
+fun <T> Monad<ForIO, T>.fix() = this as IOK<T>
+
+class IOK<T>(val run: () -> T) : Monad<ForIO, T> {
+    override fun unit(): Monad<ForIO, Unit> = IOK {}
+    override fun <V> map(f: (T) -> V): Monad<ForIO, V> = IOK { f(run()) }
+    override fun <V> flatMap(f: Monad<ForIO, T>.(T) -> Monad<ForIO, V>): Monad<ForIO, V> = IOK { f(run()).fix().run() }
+    fun toOption(): Option<T> = try {
+        Some(run())
+    } catch (e: Throwable) {
+        None() as Option<T>
+    }
+}
+
+class ForState private constructor() {
+    companion object
+}
+
+fun <S, T> Monad<ForState, T>.fix() = this as StateK<S, T>
+
+class StateK<S, T>(val runState: (S) -> Pair<T, S>) : Monad<ForState, T> {
+    override fun unit(): Monad<ForState, Unit> = StateK<S, Unit> { s -> Unit to s }
+    override fun <V> map(f: (T) -> V): Monad<ForState, V> = StateK<S, V> { s ->
+        val p = runState(s)
+        Pair(f(p.first), p.second)
+    }
+
+    override fun <V> flatMap(f: Monad<ForState, T>.(T) -> Monad<ForState, V>): Monad<ForState, V> = StateK<S, V> { s ->
+        val p = runState(s)
+        f(p.first).fix<S, V>().runState(p.second)
+    }
+}
 
 fun parseInt(str: String?): Option<out Int> = try {
     Some(str!!.toInt())
@@ -13,19 +54,19 @@ fun parseInt(str: String?): Option<out Int> = try {
     None() as Option<Int>
 }
 
-fun <C> C.askTheQuestion(str: String): IO<String>
-    where C : Console =
+fun <K, C> C.askTheQuestion(str: String): Monad<K, String>
+    where C : Console<K> =
     print(str).flatMap { read() }
 
-fun <C> C.startGame(): IO<Unit>
-    where C : Console, C : Randomness =
+fun <K, C> C.startGame(): Monad<K, Unit>
+    where C : Console<K>, C : Randomness<K> =
     print("What is your name?")
         .flatMap { read() }
         .flatMap { name -> print("Hello $name, welcome to the game!").map { name } }
         .flatMap { name -> gameLoop(name) }
 
-fun <C> C.gameLoop(userName: String): IO<Unit>
-    where C : Console, C : Randomness =
+fun <K, C> C.gameLoop(userName: String): Monad<K, Unit>
+    where C : Console<K>, C : Randomness<K> =
     createRandomNumber()
         .flatMap { guessedNumber -> print("Dear $userName, please guess a number from 1 to 5:").map { guessedNumber } }
         .flatMap { guessedNumber ->
@@ -46,32 +87,56 @@ fun <C> C.gameLoop(userName: String): IO<Unit>
         .flatMap { answer ->
             when (answer.lowercase()) {
                 "y" -> gameLoop(userName)
-                else -> IO {}
+                else -> unit()
             }
         }
 
-interface Randomness {
-    fun createRandomNumber(): IO<Int>
+interface Randomness<K> {
+    fun createRandomNumber(): Monad<K, Int>
 }
 
-fun randomness(): Randomness = object : Randomness {
-    override fun createRandomNumber(): IO<Int> = IO { (Math.random() * 10 % 5 + 1).toInt() }
+fun randomnessIO(): Randomness<ForIO> = object : Randomness<ForIO> {
+    override fun createRandomNumber(): Monad<ForIO, Int> = IOK { (Math.random() * 10 % 5 + 1).toInt() }
 }
 
-interface Console {
-    fun print(str: String): IO<Unit>
-    fun read(): IO<String>
+fun randomnessTest(): Randomness<ForState> = object : Randomness<ForState> {
+    override fun createRandomNumber(): Monad<ForState, Int> = StateK<TestData, Int> { data -> data.nextRandom() }
 }
 
-fun console(): Console = object : Console {
-    override fun print(str: String): IO<Unit> = IO { println(str) }
-    override fun read(): IO<String> = IO { readln() }
+interface Console<K> {
+    fun print(str: String): Monad<K, Unit>
+    fun read(): Monad<K, String>
 }
 
+fun consoleIO(): Console<ForIO> = object : Console<ForIO> {
+    override fun print(str: String): Monad<ForIO, Unit> = IOK { println(str) }
+    override fun read(): Monad<ForIO, String> = IOK { readln() }
+}
+
+fun consoleTest(): Console<ForState> = object : Console<ForState> {
+    override fun print(str: String): Monad<ForState, Unit> = StateK<TestData, Unit> { data -> data.putLine(str) }
+    override fun read(): Monad<ForState, String> = StateK<TestData, String> { data -> data.readLine() }
+}
+
+
+data class TestData(val output: List<String>, val input: List<String>, val numbers: List<Int>) {
+    fun putLine(str: String): Pair<Unit, TestData> = Unit to copy(output = output + str)
+    fun readLine(): Pair<String, TestData> {
+        val t = input.first()
+        return t to copy(input = input.drop(1), output = output + t)
+    }
+
+    fun nextRandom(): Pair<Int, TestData> = numbers.first() to copy(numbers = numbers.drop(1))
+}
 
 fun main() {
-    val context = object : Console by console(), Randomness by randomness() {}
-    context.startGame().toOption()
+    //val context = object : Console<ForIO> by consoleIO(), Randomness<ForIO> by randomnessIO() {}
+    //context.startGame().fix().toOption()
+
+    val testContext = object : Console<ForState> by consoleTest(), Randomness<ForState> by randomnessTest() {}
+    testContext.startGame().fix<TestData, Unit>().runState(
+        TestData(emptyList(), listOf("Pavel", "1", "y", "5", "n"), listOf(2, 5))
+    ).second.output.forEach { println(it) }
 }
 
 
@@ -106,3 +171,5 @@ fun mimperative() {
         }
     }
 }
+
+//monad transformer
