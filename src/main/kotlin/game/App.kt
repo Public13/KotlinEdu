@@ -7,9 +7,6 @@ import option.None
 import option.Option
 import option.Some
 
-//fun print(str: String): IO<Unit> = IO { println(str) }
-//fun read(): IO<String> = IO { readln() }
-
 fun parseInt(str: String?): Option<out Int> = try {
     Some(str!!.toInt())
 } catch (e: Throwable) {
@@ -20,20 +17,15 @@ fun <C> C.askTheQuestion(str: String): IO<String>
     where C : Console =
     print(str).flatMap { read() }
 
-//2. Название тоже не очень, но понятное. А по-другому никак: приветствие не засунуть в основной цикл игры
 fun <C> C.startGame(): IO<Unit>
-    where C : Console =
+    where C : Console, C : Randomness =
     print("What is your name?")
         .flatMap { read() }
         .flatMap { name -> print("Hello $name, welcome to the game!").map { name } }
         .flatMap { name -> gameLoop(name) }
 
-// effect {
-//   val guessedumber = createRandomNumber().bind()
-//   C.print("dfgdfgdf").bind()
-// }.toEither()
 fun <C> C.gameLoop(userName: String): IO<Unit>
-    where C : Console =
+    where C : Console, C : Randomness =
     createRandomNumber()
         .flatMap { guessedNumber -> print("Dear $userName, please guess a number from 1 to 5:").map { guessedNumber } }
         .flatMap { guessedNumber ->
@@ -58,25 +50,27 @@ fun <C> C.gameLoop(userName: String): IO<Unit>
             }
         }
 
+interface Randomness {
+    fun createRandomNumber(): IO<Int>
+}
+
+fun randomness(): Randomness = object : Randomness {
+    override fun createRandomNumber(): IO<Int> = IO { (Math.random() * 10 % 5 + 1).toInt() }
+}
+
 interface Console {
     fun print(str: String): IO<Unit>
     fun read(): IO<String>
 }
 
-fun createRandomNumber(): IO<Int> = IO { (Math.random() * 10 % 5 + 1).toInt() }
-
-interface Randomness {
-    fun createRandomNumber(): IO<Int>
+fun console(): Console = object : Console {
+    override fun print(str: String): IO<Unit> = IO { println(str) }
+    override fun read(): IO<String> = IO { readln() }
 }
 
-fun main() {
-    //1. плохое название (должно быть просто startTheGame), хотя, если посмотреть 2 пункт, название становится норм
-    //greedUserAndStartTheGame().run()
 
-    val context = object : Console {
-        override fun print(str: String): IO<Unit> = IO { println(str) }
-        override fun read(): IO<String> = IO { readln() }
-    }
+fun main() {
+    val context = object : Console by console(), Randomness by randomness() {}
     context.startGame().toOption()
 }
 
