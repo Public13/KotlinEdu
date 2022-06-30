@@ -30,3 +30,6 @@ class Cont<R, A>(val runCont: ((A) -> R) -> R) {
     fun <B> flatMap(f: (A) -> Cont<R, B>): Cont<R, B> = Cont { c -> runCont { a -> f(a).runCont(c) } }
 
 }
+
+// hct (предыдущая тема)
+// https://kotlinlang.org/spec/asynchronous-programming-with-coroutines.html 19.3.3
