@@ -5,6 +5,21 @@ import list.Empty
 import list.MyList
 import list.foldRight
 
+/*
+ 49. Монада Optional — fight for Totality
+ 50. реализация
+ 51. map
+ 52. flatMap
+ 53. getOrElse: A
+ 54. orElse: Option<A>
+ 55. filter
+ 56. lift (f:(A)->B):(O<A>)->O<B>
+ 57. map2 (combine)
+ 58. sequence (L<O<A>>->O<L<A>>)
+ 59. L<A>.traverse(f:(A)->O<B>):O<L<B>>
+ 60. Option comprehension
+ */
+
 sealed class Option<T> {
     companion object {
         fun <T> of(value: T?) = when (value == null) {

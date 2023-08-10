@@ -1,5 +1,32 @@
 package list
 
+
+/**
+ *  27. Список (List)
+ *  28. of
+ *  29. head
+ *  30. tail
+ *  31. drop
+ *  32. dropWhile
+ *  33. append
+ *  34. foldRight
+ *  35. length
+ *  36. take?
+ *  37. foldLeft — stack safe(!)
+ *  38. sum/product using foldLeft
+ *  39. foldRight in terms of foldLeft
+ *  40. append in terms of foldLeft
+ *  41. flatten in terms of foldLeft (list of lists)
+ *  42. map
+ *  43. filter
+ *  44. flatMap
+ *  45. filter in terms of flatMap
+ *  46. zipWith
+ *  47. hasSubsequence
+ *  48. FlatMap и умножение
+ */
+
+
 sealed class MyList<T> {
     companion object {
         @Suppress("UNCHECKED_CAST")
@@ -261,6 +288,18 @@ fun <T, V, Z> MyList<T>.zipWith(otherList: MyList<V>, f: (T, V) -> Z): MyList<Z>
     is Cons -> when (otherList) {
         is Empty -> Empty() as MyList<Z>
         is Cons -> Cons(f(this.value, otherList.value), this.tail.zipWith(otherList.tail, f))
+    }
+}
+
+// from Maks
+tailrec fun <T> MyList<T>.hasSubSequenceM(otherList: MyList<T>): Boolean = when (otherList) {
+    is Empty -> true
+    is Cons -> when (this) {
+        is Empty -> false
+        is Cons -> when (value == otherList.value) {
+            true -> tail.hasSubSequence(otherList.tail)
+            false -> tail.hasSubSequence(otherList)
+        }
     }
 }
 

@@ -4,6 +4,15 @@ import option.None
 import option.Option
 import option.Some
 
+/*
+ 61. Монада IO (простая реализация)
+ 62. map
+ 63. flatMap
+ 64. safeRun (в optional)
+ 65. реализация простейшего императива
+ 66. trampolining (*hard)
+ */
+
 class IO<T>(val run: () -> T) {
     fun <V> map(f: (T) -> V): IO<V> = IO { f(run()) }
     fun <V> flatMap(f: (T) -> IO<V>): IO<V> = IO { f(run()).run() }
