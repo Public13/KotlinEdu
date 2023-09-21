@@ -4,6 +4,24 @@ import option.None
 import option.Option
 import option.Some
 
+/**
+ * Стримы (ленивые списки)
+ * 68. Проблематика, структура данных для решения проблемы
+ * 69. of()
+ * 70. toList()
+ * 71. take(n)
+ * 72. drop(n)
+ * 73. takeWhile()
+ * 74. foldRight
+ * 75. forAll()
+ * 76. takeWhile in terms of foldRight
+ * 77. headOption in terms of foldRight()
+ * 78. map in terms of foldRight
+ * 79. filter in terms of foldRight
+ * 80. append in terms of foldRight
+ * 81. flatMap in terms of foldRight
+ */
+
 sealed class Stream<out T> {
     class Empty : Stream<Nothing>()
     class Cons<T>(val value: () -> T, val tail: () -> Stream<T>) : Stream<T>()
